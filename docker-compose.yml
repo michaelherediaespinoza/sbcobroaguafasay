@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app_cobrosagua:
+    build: cobroagua
+    mem_limit: 512m
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://cobro_agua:5432/dbcobroagua
+      DB_USER_NAME: postgres  
+      DB_PASSWORD: patito.123
+    restart: always
+    depends_on:
+      - cobro_agua
+      
+  cobro_agua:
+    image: postgres:16.1  # Imagen de PostgreSQL
+    ports:
+      - "5433:5432" # PostgreSQL usa el puerto 5432 por defecto
+    environment:
+      POSTGRES_USER: postgres           # Nombre del usuario administrador
+      POSTGRES_PASSWORD: patito.123     # Contraseña del usuario administrador
+      POSTGRES_DB: dbcobroagua          # Nombre de la base de datos a crear
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]  # Verificación de estado de PostgreSQL
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      
+  pgadmin:
+    image: dpage/pgadmin4:latest  # Imagen oficial de pgAdmin
+    container_name: pgadmin
+    ports:
+      - "5050:80"  # pgAdmin estará accesible en el puerto 5050 del host
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com  # Usuario por defecto para pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin123      # Contraseña del usuario por defecto
+    restart: always
+    depends_on:
+      - cobro_agua
